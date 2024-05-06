@@ -154,7 +154,7 @@ app.delete('/api/courses/:id', async (req, res, next) => {
       
       res.status(204).end();
     } else {
-      /
+      
       res.status(404).json({ message: 'Course not found' });
     }
   } catch (error) {

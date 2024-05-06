@@ -2,9 +2,10 @@
 
 const { DataTypes } = require('sequelize');
 const sequelize = require('./index'); 
-const User = require('./user'); 
+
 
 const Course = sequelize.define('Course', { 
+    
   title: {
     type: DataTypes.STRING,
     allowNull: false

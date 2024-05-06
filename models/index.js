@@ -21,7 +21,11 @@ const db = {};
 
 fs
   .readdirSync(__dirname)
+ 
   .filter(file => {
+     console.log(file); 
+    const filePath = path.join(__dirname, file);
+    console.log('File path:', filePath);
     return (
       file.indexOf('.') !== 0 &&
       file !== basename &&
@@ -30,11 +34,13 @@ fs
     );
   })
   .forEach(file => {
-    const modelDefiner = require(path.join(__dirname, file));
+    const filePath = path.join(__dirname, file);
+    console.log('File path:', filePath);
+    const modelDefiner = require(filePath);
     const modelName = path.basename(file, '.js'); 
     const model = modelDefiner(sequelize); 
     db[modelName] = model;
-  });
+});
 
 Object.keys(db).forEach(modelName => {
   if (db[modelName].associate) {
