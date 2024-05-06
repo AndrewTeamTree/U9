@@ -19,8 +19,9 @@
     "cross-env": "^7.0.2",
     "express": "^4.17.1",
     "morgan": "^1.10.0",
+    "mysql2": "^3.9.7",
     "promise.prototype.finally": "^3.1.2",
     "sequelize": "^6.37.3",
-    "sqlite3": "^5.0.0"
+    "sqlite3": "^5.1.7"
   }
 }
