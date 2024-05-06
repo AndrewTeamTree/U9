@@ -62,3 +62,7 @@ typings/
 
 # SQLite database file
 *.db
+
+node_modules
+
+config.js
