@@ -3,7 +3,7 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('./index'); 
 
-const User = sequelize.define('User', {
+const user = sequelize.define('user', {
   firstName: {
     type: DataTypes.STRING,
     allowNull: false,
@@ -56,11 +56,11 @@ const User = sequelize.define('User', {
 });
 
 // Define association with Course model
-User.associate = (models) => {
-  User.hasMany(models.Course, {
+user.associate = (models) => {
+  user.hasMany(models.Course, {
     foreignKey: 'userId', 
     onDelete: 'CASCADE' 
   });
 };
 
-module.exports = User;
+module.exports = user;

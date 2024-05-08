@@ -1,11 +1,12 @@
 'use strict';
 
-const { DataTypes } = require('sequelize');
-const sequelize = require('./index'); 
+const { DataTypes, Sequelize } = require('sequelize');
+const config = require('../config/config.json');
 
+// Create Sequelize instance using the configuration options
+const sequelize = new Sequelize(config.development);
 
-const Course = sequelize.define('Course', { 
-    
+const course = sequelize.define('course', { 
   title: {
     type: DataTypes.STRING,
     allowNull: false
@@ -23,8 +24,8 @@ const Course = sequelize.define('Course', {
 });
 
 // Define association with User model
-Course.associate = (models) => {
-  Course.belongsTo(models.User, {
+course.associate = (models) => {
+  course.belongsTo(models.User, {
     foreignKey: {
       fieldName: 'userId',
       allowNull: false,
@@ -33,4 +34,4 @@ Course.associate = (models) => {
   });
 };
 
-module.exports = Course;
+module.exports = course;
