@@ -4,21 +4,23 @@
     "password": null,
     "database": "../fsjstd-restapi.db",
     "host": "127.0.0.1",
-    "dialect": "sqlite3"
-    
+    "dialect": "sqlite",
+    "storage": "../fsjstd-restapi.db"
   },
   "test": {
     "username": "root",
     "password": null,
     "database": "database_test",
     "host": "127.0.0.1",
-    "dialect": "mysql2"
+    "dialect": "sqlite",
+    "storage": "database_test.sqlite"
   },
   "production": {
     "username": "root",
     "password": null,
     "database": "database_production",
     "host": "127.0.0.1",
-    "dialect": "mysql2"
+    "dialect": "sqlite",
+    "storage": "database_production.sqlite"
   }
 }

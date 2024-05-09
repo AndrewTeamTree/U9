@@ -1,6 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const courseController = require('../controllers/courseController');
+const dbModule = require('./db')
+const sequelize = dbModule.sequelize;
+const models = dbModule.models;
 
 router.get('/', courseController.getAllCourses);
 router.get('/:id', courseController.getCourseById);

@@ -1,9 +1,10 @@
 'use strict';
+const { Model, DataTypes } = require('sequelize');
+const sequelize = require('../models').sequelize; // Import sequelize instance from models/index.js
 
-const { DataTypes } = require('sequelize');
-const sequelize = require('./index'); 
+class User extends Model {}
 
-const user = sequelize.define('user', {
+User.init({
   firstName: {
     type: DataTypes.STRING,
     allowNull: false,
@@ -53,14 +54,9 @@ const user = sequelize.define('user', {
       }
     }
   }
+}, {
+  sequelize, // Pass the sequelize instance
+  modelName: 'User'
 });
 
-// Define association with Course model
-user.associate = (models) => {
-  user.hasMany(models.Course, {
-    foreignKey: 'userId', 
-    onDelete: 'CASCADE' 
-  });
-};
-
-module.exports = user;
+module.exports = User;

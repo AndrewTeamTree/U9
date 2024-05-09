@@ -1,37 +1,33 @@
 'use strict';
+const { Model, DataTypes } = require('sequelize');
+const sequelize = require('../models').sequelize; // Import sequelize instance from models/index.js
 
-const { DataTypes, Sequelize } = require('sequelize');
-const config = require('../config/config.json');
+module.exports = (sequelize, modelName, options = {}) => {
+  class Course extends Model {}
 
-// Create Sequelize instance using the configuration options
-const sequelize = new Sequelize(config.development);
-
-const course = sequelize.define('course', { 
-  title: {
-    type: DataTypes.STRING,
-    allowNull: false
-  },
-  description: {
-    type: DataTypes.TEXT,
-    allowNull: false
-  },
-  estimatedTime: {
-    type: DataTypes.STRING
-  },
-  materialsNeeded: {
-    type: DataTypes.STRING
-  }
-});
-
-// Define association with User model
-course.associate = (models) => {
-  course.belongsTo(models.User, {
-    foreignKey: {
-      fieldName: 'userId',
-      allowNull: false,
+  Course.init(
+    {
+      title: {
+        type: DataTypes.STRING,
+        allowNull: false
+      },
+      description: {
+        type: DataTypes.TEXT,
+        allowNull: false
+      },
+      estimatedTime: {
+        type: DataTypes.STRING
+      },
+      materialsNeeded: {
+        type: DataTypes.STRING
+      }
     },
-    onDelete: 'CASCADE',
-  });
-};
+    {
+      sequelize,
+      modelName,
+      ...options // Pass additional options here
+    }
+  );
 
-module.exports = course;
+  return Course;
+};
