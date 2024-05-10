@@ -1,17 +1,164 @@
+
+'use strict';
+
 const express = require('express');
 const router = express.Router();
-const courseController = require('../controllers/courseController');
-const dbModule = require('./db')
-const sequelize = dbModule.sequelize;
-const models = dbModule.models;
+const { asyncHandler } = require('../middleware/asyncHandler');
+const { User, Course } = require('../models'); 
+const { check, validationResult } = require('express-validator');
+const { authenticateJWT} = require('../middleware/asyncHandler'); 
 
-router.get('/', courseController.getAllCourses);
-router.get('/:id', courseController.getCourseById);
-router.post('/', courseController.createCourse);
-router.put('/:id', courseController.updateCourse);
-router.delete('/:id', courseController.deleteCourse);
+
+// Define the createCourse function
+exports.createCourse = asyncHandler(async (req, res) => {
+  const result = validationResult(req);
+
+  if (result.isEmpty()) {
+    try {
+      const course = await Course.build(req.body);
+      const user = await User.findByPk(req.body.userId);
+
+      if (!user) {
+        res.status(404).json({ message: 'User not found' });
+      }
+
+      await course.save();
+      res.status(201).location(`/courses/${course.id}`).end();
+    } catch (error) {
+      if (error.name === "SequelizeValidationError" || error.name === "SequelizeUniqueConstraintError") {
+        const errors = error.errors.map(err => err.message);
+        res.status(400).json({ errors });
+      } else {
+        throw error;
+      }
+    }
+  } else {
+    res.status(400).send({ errors: result.array() });
+  }
+});
+
+router.get('/courses', asyncHandler(async (req, res) => {
+  const courses = await Course.findAll({
+    include: {
+      model: User,
+    },
+  });
+  if (courses.length > 0) {
+    res.status(200).json(courses);
+  } else {
+    res.status(404).json({ message: 'No courses found.' }); // Corrected else statement
+  }
+}));
+
+router.get('/courses/:id', asyncHandler(async (req, res) => {
+  const courseId = req.params.id;
+  const course = await Course.findByPk(courseId, {
+    include: {
+      model: User,
+    }
+  });
+  if (course) {
+    res.status(200).send(course);
+  } else {
+    res.status(404).send({ message: 'Course not found.' });
+  }
+}));
+
+
+router.post('/courses', authenticateJWT, [
+  check('title')
+    .notEmpty()
+    .withMessage('Please enter a valid course title.'),
+  check('description')
+    .notEmpty()
+    .withMessage('Please enter a valid course description.'),
+],
+asyncHandler(async (req, res) => {
+  const result = validationResult(req);
+
+  if (result.isEmpty()) {
+    try {
+      const course = await Course.build(req.body);
+      const user = await User.findByPk(req.body.userId);
+
+      if (!user) {
+        res.status(404).json({ message: 'User not found' });
+      }
+
+      await course.save();
+      res.status(201).location(`/courses/${course.id}`).end();
+    } catch (error) {
+      if (error.name === "SequelizeValidationError" || error.name === "SequelizeUniqueConstraintError") {
+        const errors = error.errors.map(err => err.message);
+        res.status(400).json({ errors });
+      } else {
+        throw error; //error caught in the asyncHandler's catch block
+      }
+    }
+  } else {
+    res.status(400).send({ errors: result.array() }); // runs if empty title or description
+  }
+}));
+
+
+router.put('/courses/:id', authenticateJWT, [
+  check('title')
+    .notEmpty()
+    .withMessage('Please enter a valid course title.'),
+  check('description')
+    .notEmpty()
+    .withMessage('Please enter a valid course description.'),
+],
+  asyncHandler(async (req, res) => {
+    const result = validationResult(req);
+
+    if (result.isEmpty()) {
+      let course;
+      try {
+        course = await Course.findByPk(req.params.id);
+        if (course) {
+          await course.set(req.body);
+          const user = await User.findByPk(req.body.userId);
+
+          // check if user exists before Course can be saved
+          if (!user) {
+            res.status(404).json({ message: 'User not found' });
+          }
+
+          await course.save();
+          res.status(204).location(`/courses/${course.id}`).end();
+        } else {
+          res.status(404).json({ message: 'Course not found.' });
+        }
+      } catch (error) {
+        if (error.name === "SequelizeValidationError" || error.name === "SequelizeUniqueConstraintError") {
+          const errors = error.errors.map(err => err.message);
+          res.status(400).json({ errors });
+        } else {
+          throw error; //error caught in the asyncHandler's catch block
+        }
+      }
+    } else {
+      res.status(400).send({ errors: result.array() }); // runs if empty title or description
+    }
+  })
+);
+
+router.delete('/courses/:id', authenticateJWT, asyncHandler(async (req, res) => {
+  const course = await Course.findByPk(req.params.id);
+  if (course) {
+    await course.destroy();
+    res.status(204).end();
+  } else {
+    res.status(404).json({ message: 'Course not found' });
+  };
+}));
 
 module.exports = router;
+
+
+
+
 
 
 

@@ -1,55 +1,55 @@
+'use strict';
 
 const express = require('express');
 const router = express.Router();
-const asyncHandler = require('../middleware/asyncHandler');
-const { check, validationResult } = require('express-validator'); // Import check function and validationResult
-const { authenticateUser } = require('../middleware/auth');
-const { User } = require('../models'); // Import User model
+const asyncHandler = require('express-async-handler'); 
+const { check, validationResult } = require('express-validator');
+const { authenticateJWT } = require('../middleware/asyncHandler'); 
+const { User } = require('../models');
 
-// Regular expression for validating names
-const nameRegex = /^[a-zA-Z-]+$/;
+// Validating names
+const nameRegex = /^[a-zA-Z-]+(?:[\s-][a-zA-Z-]+)*$/;
 
-router.get('/users', asyncHandler(async (req, res) => {
-    const user = req.currentUser;
-  res.status(200).json({ user });
+router.get('/users', authenticateJWT, asyncHandler(async (req, res) => { 
+    const user = req.user; 
+    res.status(200).json({ user });
 }));
-
 
 /* CREATE a new user */
 router.post('/users', [
-  check('firstName')
-    .isLength({ min: 2 })
-    .matches(nameRegex)
-    .withMessage('First name is required. Please use only alphabetic characters and hyphens.'),
-  check('lastName')
-    .isLength({ min: 2 })
-    .matches(nameRegex)
-    .withMessage('Last name is required. Please use only alphabetic characters and hyphens.'),
-  check('emailAddress')
-    .isEmail()
-    .withMessage('Invalid email format'),
-  check('password')
-    .isLength({ min: 8, max: 20 })
-    .withMessage('Must be 8-20 characters in length.')
-],
-asyncHandler(async (req, res) => {
-  const result = validationResult(req);
+    check('firstName')
+        .isLength({ min: 2 })
+        .matches(nameRegex)
+        .withMessage('First name is required. Please use only alphabetic characters and hyphens.'),
+    check('lastName')
+        .isLength({ min: 2 })
+        .matches(nameRegex)
+        .withMessage('Last name is required. Please use only alphabetic characters and hyphens.'),
+    check('emailAddress')
+        .isEmail()
+        .withMessage('Invalid email format'),
+    check('password')
+        .isLength({ min: 8, max: 20 })
+        .withMessage('Must be 8-20 characters in length.')
+], asyncHandler(async (req, res) => {
+    const result = validationResult(req);
 
-  if (result.isEmpty()) {
-    try {
-      await User.create(req.body);
-      res.status(201).location('/').end();
-    } catch (error) {
-      if (error.name === "SequelizeValidationError" || error.name === "SequelizeUniqueConstraintError") {
-        const errors = error.errors.map(err => err.message);
-        res.status(400).json({ errors });
-      } else {
-        throw error;
-      }
+    if (result.isEmpty()) {
+        try {
+            await User.create(req.body);
+            res.status(201).location('/').end();
+        } catch (error) {
+            if (error.name === "SequelizeValidationError" || error.name === "SequelizeUniqueConstraintError") {
+                const errors = error.errors.map(err => err.message);
+                res.status(400).json({ errors });
+            } else {
+                throw error;
+            }
+        }
+    } else {
+        res.status(400).json({ errors: result.array() });
     }
-  } else {
-    res.status(400).json({ errors: result.array() });
-  }
 }));
 
 module.exports = router;
+

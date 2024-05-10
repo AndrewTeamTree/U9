@@ -1,3 +1,5 @@
+const asyncHandler = (fn) => (req, res, next) =>
+  Promise.resolve(fn(req, res, next)).catch(next);
 
 const jwt = require('jsonwebtoken');
 
@@ -16,4 +18,4 @@ const authenticateJWT = (req, res, next) => {
   }
 };
 
-module.exports = { authenticateJWT };
+module.exports = { asyncHandler, authenticateJWT };

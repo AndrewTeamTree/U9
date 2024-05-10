@@ -1,62 +1,73 @@
 'use strict';
 const { Model, DataTypes } = require('sequelize');
-const sequelize = require('../models').sequelize; // Import sequelize instance from models/index.js
+const bcryptjs = require('bcryptjs');
 
-class User extends Model {}
+module.exports = (sequelize) => {
+  class User extends Model { }
+  User.init({
+    firstName: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      validate: {
+        notNull: {
+          msg: 'Please enter a valid input only containing letters and hyphens.',
+        },
+        notEmpty: {
+          msg: 'A first name is required.'
+        },
+      },
+    },
+    lastName: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      validate: {
+        notNull: {
+          msg: 'Please enter a valid input only containing letters and hyphens.',
+        },
+        notEmpty: {
+          msg: 'A last name is required.'
+        },
+      },
+    },
+    emailAddress: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      unique: {
+        msg: 'Email adress must be unique. This email is already registered.',
+      },
+      validate: {
+        notNull: {
+          msg: 'Please enter a valid email address',
+        },
+        notEmpty: {
+          msg: 'Please provide an email address.',
+        },
+        isEmail: {
+          msg: 'Invalid email format. Please enter a valid email address',
+        }
+      },
+    },
+    password: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      validate: {
+        notNull: {
+          msg: 'A password is required.',
+        },
+        notEmpty: {
+          msg: 'Please provide a password.',
+        },
+      },
+      set(val) {
+        const hashedPassword = bcryptjs.hashSync(val, 10);
+        this.setDataValue('password', hashedPassword);
+      }
+    },
+  }, { sequelize });
 
-User.init({
-  firstName: {
-    type: DataTypes.STRING,
-    allowNull: false,
-    validate: {
-      notNull: {
-        msg: 'Please provide a first name' 
-      },
-      notEmpty: {
-        msg: 'First name cannot be empty' 
-      }
-    }
-  },
-  lastName: {
-    type: DataTypes.STRING,
-    allowNull: false,
-    validate: {
-      notNull: {
-        msg: 'Please provide a last name' 
-      },
-      notEmpty: {
-        msg: 'Last name cannot be empty' 
-      }
-    }
-  },
-  email: {
-    type: DataTypes.STRING,
-    allowNull: false,
-    unique: true,
-    validate: {
-      notNull: {
-        msg: 'Please provide an email address' 
-      },
-      isEmail: {
-        msg: 'Please provide a valid email address' 
-      }
-    }
-  },
-  password: {
-    type: DataTypes.STRING,
-    allowNull: false,
-    validate: {
-      notNull: {
-        msg: 'Please provide a password' 
-      },
-      notEmpty: {
-        msg: 'Password cannot be empty' 
-      }
-    }
-  }
-}, {
-  sequelize, // Pass the sequelize instance
-  modelName: 'User'
-});
+  User.associate = (models) => {
+    User.hasMany(models.Course);
+  };
 
-module.exports = User;
+  return User;
+};

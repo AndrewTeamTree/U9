@@ -2,11 +2,10 @@
 
 const express = require('express');
 const morgan = require('morgan');
-const sequelize = require('./models/index').sequelize; // Import sequelize instance
-
+const sequelize = require('./models/index').sequelize; 
 const userRoutes = require('./routes/userRoutes');
 const courseRoutes = require('./routes/courseRoutes');
-const authMiddleware = require('./middleware/authJwt');
+const authMiddleware = require('./middleware/asyncHandler');
 const app = express();
 
 // Apply authentication middleware to routes
@@ -18,9 +17,16 @@ app.post('/api/resource', authMiddleware.authenticateJWT, (req, res) => {
 app.use(express.json());
 app.use(morgan('dev'));
 
+// Root route
+app.get('/', (req, res) => {
+  res.json({
+    message: 'Welcome to the REST API project!',
+  });
+});
+
 // Define route middleware
-app.use('/api/users', userRoutes);
-app.use('/api/courses', courseRoutes);
+app.use('/api', userRoutes);
+app.use('/api', courseRoutes);
 
 // Route not found middleware
 app.use((req, res, next) => {
