@@ -10,13 +10,13 @@ const { User } = require('../models');
 // Validating names
 const nameRegex = /^[a-zA-Z-]+(?:[\s-][a-zA-Z-]+)*$/;
 
-router.get('/api/users', authenticateJWT, asyncHandler(async (req, res) => { 
+router.get('/users', authenticateJWT, asyncHandler(async (req, res) => { 
     const user = req.currentUser; 
     res.status(200).json({ user });
 }));
 
 /* CREATE a new user */
-router.post('/api/users', [
+router.post('/users', [
     check('firstName')
         .isLength({ min: 2 })
         .matches(nameRegex)
@@ -52,4 +52,3 @@ router.post('/api/users', [
 }));
 
 module.exports = router;
-

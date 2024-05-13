@@ -37,7 +37,7 @@ exports.createCourse = asyncHandler(async (req, res) => {
   }
 });
 
-router.get('/api/courses', asyncHandler(async (req, res) => {
+router.get('/courses', asyncHandler(async (req, res) => {
   const courses = await Course.findAll({
     include: {
       model: User,
@@ -45,27 +45,35 @@ router.get('/api/courses', asyncHandler(async (req, res) => {
   });
   if (courses.length > 0) {
     res.status(200).json(courses);
+    return courses;
   } else {
     res.status(404).json({ message: 'No courses found.' }); // Corrected else statement
   }
 }));
-
 router.get('/courses/:id', asyncHandler(async (req, res) => {
-  const courseId = req.params.id;
-  const course = await Course.findByPk(courseId, {
-    include: {
-      model: User,
+  try {
+    const courseId = req.params.id;
+    console.log('Requested Course ID:', courseId); // Log the requested course ID
+    const course = await Course.findByPk(courseId, {
+      include: {
+        model: User,
+      }
+    });
+    if (course) {
+      console.log('Found Course:', course); // Log the found course
+      res.status(200).send(course);
+    } else {
+      console.log('Course not found'); // Log if course is not found
+      res.status(404).send({ message: 'Course not found.' });
     }
-  });
-  if (course) {
-    res.status(200).send(course);
-  } else {
-    res.status(404).send({ message: 'Course not found.' });
+  } catch (error) {
+    console.error('Error fetching course:', error); // Log any errors that occur
+    res.status(500).send({ message: 'Internal Server Error' });
   }
 }));
 
 
-router.post('/api/courses', authenticateJWT, [
+router.post('/courses', authenticateJWT, [
   check('title')
     .notEmpty()
     .withMessage('Please enter a valid course title.'),
@@ -101,7 +109,7 @@ asyncHandler(async (req, res) => {
 }));
 
 
-router.put('/api/courses/:id', authenticateJWT, [
+router.put('/courses/:id', authenticateJWT, [
   check('title')
     .notEmpty()
     .withMessage('Please enter a valid course title.'),
@@ -144,7 +152,7 @@ router.put('/api/courses/:id', authenticateJWT, [
   })
 );
 
-router.delete('/api/courses/:id', authenticateJWT, asyncHandler(async (req, res) => {
+router.delete('/courses/:id', authenticateJWT, asyncHandler(async (req, res) => {
   const course = await Course.findByPk(req.params.id);
   if (course) {
     await course.destroy();
@@ -155,7 +163,6 @@ router.delete('/api/courses/:id', authenticateJWT, asyncHandler(async (req, res)
 }));
 
 module.exports = router;
-
 
 
 

@@ -16,14 +16,6 @@ app.post('/api/resource', authMiddleware.authenticateJWT, (req, res) => {
 
 app.use(express.json());
 app.use(morgan('dev'));
-app.use('/api', userRoute);
-
-// Root route
-app.get('/', (req, res) => {
-  res.json({
-    message: 'Welcome to the REST API project!',
-  });
-});
 
 // Define route middleware
 app.use('/api', userRoute);
@@ -44,6 +36,15 @@ app.use((err, req, res, next) => {
     error: {},
   });
 });
+
+
+// Root route
+app.get('/', (req, res) => {
+  res.json({
+    message: 'Welcome to the REST API project!',
+  });
+});
+
 
 // Start the server
 (async () => {
