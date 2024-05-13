@@ -1,3 +1,4 @@
+
 'use strict';
 
 const fs = require('fs');
@@ -35,6 +36,15 @@ Object.keys(db).forEach(modelName => {
   if (db[modelName].associate) {
     db[modelName].associate(db);
   }
+});
+
+// Check if the UserId column already exists in the Courses table
+sequelize.queryInterface.describeTable('Courses').then(attributes => {
+  
+   
+  
+}).catch(err => {
+  console.error('Error describing Courses table:', err);
 });
 
 db.sequelize = sequelize;

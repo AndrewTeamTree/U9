@@ -37,7 +37,7 @@ exports.createCourse = asyncHandler(async (req, res) => {
   }
 });
 
-router.get('/courses', asyncHandler(async (req, res) => {
+router.get('/api/courses', asyncHandler(async (req, res) => {
   const courses = await Course.findAll({
     include: {
       model: User,
@@ -65,7 +65,7 @@ router.get('/courses/:id', asyncHandler(async (req, res) => {
 }));
 
 
-router.post('/courses', authenticateJWT, [
+router.post('/api/courses', authenticateJWT, [
   check('title')
     .notEmpty()
     .withMessage('Please enter a valid course title.'),
@@ -101,7 +101,7 @@ asyncHandler(async (req, res) => {
 }));
 
 
-router.put('/courses/:id', authenticateJWT, [
+router.put('/api/courses/:id', authenticateJWT, [
   check('title')
     .notEmpty()
     .withMessage('Please enter a valid course title.'),
@@ -144,7 +144,7 @@ router.put('/courses/:id', authenticateJWT, [
   })
 );
 
-router.delete('/courses/:id', authenticateJWT, asyncHandler(async (req, res) => {
+router.delete('/api/courses/:id', authenticateJWT, asyncHandler(async (req, res) => {
   const course = await Course.findByPk(req.params.id);
   if (course) {
     await course.destroy();

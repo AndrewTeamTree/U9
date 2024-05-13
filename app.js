@@ -3,8 +3,8 @@
 const express = require('express');
 const morgan = require('morgan');
 const sequelize = require('./models/index').sequelize; 
-const userRoutes = require('./routes/userRoutes');
-const courseRoutes = require('./routes/courseRoutes');
+const userRoute = require('./routes/userRoutes');
+const courseRoute = require('./routes/courseRoutes');
 const authMiddleware = require('./middleware/asyncHandler');
 const app = express();
 
@@ -16,6 +16,7 @@ app.post('/api/resource', authMiddleware.authenticateJWT, (req, res) => {
 
 app.use(express.json());
 app.use(morgan('dev'));
+app.use('/api', userRoute);
 
 // Root route
 app.get('/', (req, res) => {
@@ -25,8 +26,8 @@ app.get('/', (req, res) => {
 });
 
 // Define route middleware
-app.use('/api', userRoutes);
-app.use('/api', courseRoutes);
+app.use('/api', userRoute);
+app.use('/api', courseRoute);
 
 // Route not found middleware
 app.use((req, res, next) => {
@@ -49,11 +50,9 @@ app.use((err, req, res, next) => {
   try {
     await sequelize.authenticate();
     console.log('Connection to the database has been established successfully.');
-    await sequelize.sync({ alter: true });
-    console.log('Models have been synchronized with the database.');
-
+    
     const port = process.env.PORT || 5000;
-    const server = app.listen(port, () => {
+     app.listen(port, () => {
       console.log(`Express server is listening on port ${port}`);
     });
   } catch (error) {

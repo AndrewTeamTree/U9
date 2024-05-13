@@ -1,7 +1,6 @@
 'use strict';
 const { Model, DataTypes } = require('sequelize');
 
-
 module.exports = (sequelize) => {
   class Course extends Model { }
   Course.init({
@@ -37,17 +36,15 @@ module.exports = (sequelize) => {
       type: DataTypes.STRING,
       allowNull: true,
     },
-    userId: { 
-      type: DataTypes.INTEGER, 
-      allowNull: false,
-    },
+   
   }, { sequelize });
 
   Course.associate = (models) => {
     Course.belongsTo(models.User, {
-      foreignKey: 'userId' 
-    });
+      foreignKey: 'userId',
+  })
   }
 
   return Course;
 }
+
