@@ -1,17 +1,27 @@
 'use strict';
-
+const { check, validationResult } = require('express-validator');
+const { asyncHandler } = require('../middleware/asyncHandler');
+const { User } = require('../models');
+const bcrypt = require('bcryptjs'); 
 const express = require('express');
 const router = express.Router();
-const asyncHandler = require('express-async-handler'); 
-const { check, validationResult } = require('express-validator');
-const { authenticateJWT } = require('../middleware/asyncHandler'); 
-const { User } = require('../models');
-
-// Validating names
 const nameRegex = /^[a-zA-Z-]+(?:[\s-][a-zA-Z-]+)*$/;
 
-router.get('/users', authenticateJWT, asyncHandler(async (req, res) => { 
-    const user = req.currentUser; 
+
+// Middleware to add Authorization header to requests
+const addAuthorizationHeader = (req, res, next) => {
+  const base64Credentials = Buffer.from('example_user:example_password').toString('base64');
+  req.headers.authorization = `Basic ${base64Credentials}`;
+  next();
+};
+
+
+// Apply the middleware to all routes in this router
+router.use(addAuthorizationHeader);
+
+// GET /api/users route
+router.get('/users', asyncHandler(async (req, res) => {
+    const user = req.currentUser;
     res.status(200).json({ user });
 }));
 
@@ -36,6 +46,11 @@ router.post('/users', [
 
     if (result.isEmpty()) {
         try {
+            
+            // Hash the password using bcryptjs before saving to the database
+            const hashedPassword = await bcrypt.hash(req.body.password, 10); 
+            req.body.password = hashedPassword; 
+
             await User.create(req.body);
             res.status(201).location('/').end();
         } catch (error) {

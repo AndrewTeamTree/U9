@@ -1,23 +1,35 @@
-const jwt = require('jsonwebtoken');
-const asyncHandler = (fn) => (req, res, next) =>
-  Promise.resolve(fn(req, res, next)).catch(next);
+'use strict';
 
-const authenticateJWT = (req, res, next) => {
-  const token = req.headers.authorization?.split(' ')[1];
-  if (token) {
-    jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
-      if (err) {
-        console.error('JWT verification error:', err);
-        return res.sendStatus(403); // Forbidden
-      }
-      console.log('JWT decoded:', decoded);
-      req.user = decoded; // Store decoded user information in request object
-      next();
-    });
+const asyncHandler = (fn) => (req, res, next) => {
+  Promise.resolve(fn(req, res, next)).catch(next);
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader) {
+    // If Authorization header is missing
+    console.warn('Authorization header is missing');
+    return res.status(401).json({ error: 'Authorization header is missing' });
+  }
+
+  const authComponents = authHeader.split(' ');
+  if (authComponents.length !== 2 || authComponents[0] !== 'Basic') {
+    // If Authorization header is not in the correct format
+    console.warn('Authorization header is not in the correct format');
+    return res.status(401).json({ error: 'Authorization header is not in the correct format' });
+  }
+
+  const base64Credentials = authComponents[1];
+  const credentials = Buffer.from(base64Credentials, 'base64').toString('ascii');
+  const [username, password] = credentials.split(':');
+
+  // Check if the username and password match with your database records
+  if (username === 'user' && password === 'password') {
+    // Authentication successful, proceed to the next middleware
+    next();
   } else {
-    console.warn('Authorization header not found');
-    res.sendStatus(401); // Unauthorized
+    // Authentication failed, send 401 Unauthorized response
+    console.warn('Invalid credentials');
+    res.status(401).json({ error: 'Invalid credentials' });
   }
 };
 
-module.exports = { asyncHandler, authenticateJWT };
+module.exports = { asyncHandler };

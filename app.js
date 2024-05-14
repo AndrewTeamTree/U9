@@ -1,3 +1,4 @@
+
 'use strict';
 
 const express = require('express');
@@ -5,12 +6,18 @@ const morgan = require('morgan');
 const sequelize = require('./models/index').sequelize; 
 const userRoute = require('./routes/userRoutes');
 const courseRoute = require('./routes/courseRoutes');
-const authMiddleware = require('./middleware/asyncHandler');
+const { asyncHandler } = require('./middleware/asyncHandler'); 
 const app = express();
 
+// Root route
+app.get('/', (req, res) => {
+  res.json({
+    message: 'Welcome to the REST API project!',
+  });
+});
+
 // Apply authentication middleware to routes
-app.post('/api/resource', authMiddleware.authenticateJWT, (req, res) => {
-  // This route is protected, only accessible with a valid JWT token
+app.post('/api/resource', asyncHandler, (req, res) => { 
   res.json({ message: 'Protected resource accessed successfully' });
 });
 
@@ -37,15 +44,6 @@ app.use((err, req, res, next) => {
   });
 });
 
-
-// Root route
-app.get('/', (req, res) => {
-  res.json({
-    message: 'Welcome to the REST API project!',
-  });
-});
-
-
 // Start the server
 (async () => {
   try {
@@ -53,7 +51,7 @@ app.get('/', (req, res) => {
     console.log('Connection to the database has been established successfully.');
     
     const port = process.env.PORT || 5000;
-     app.listen(port, () => {
+    app.listen(port, () => {
       console.log(`Express server is listening on port ${port}`);
     });
   } catch (error) {
