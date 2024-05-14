@@ -10,7 +10,7 @@ const nameRegex = /^[a-zA-Z-]+(?:[\s-][a-zA-Z-]+)*$/;
 
 // Middleware to add Authorization header to requests
 const addAuthorizationHeader = (req, res, next) => {
-  const base64Credentials = Buffer.from('example_user:example_password').toString('base64');
+  const base64Credentials = Buffer.from('username:password').toString('base64');
   req.headers.authorization = `Basic ${base64Credentials}`;
   next();
 };
@@ -21,9 +21,10 @@ router.use(addAuthorizationHeader);
 
 // GET /api/users route
 router.get('/users', asyncHandler(async (req, res) => {
-    const user = req.currentUser;
-    res.status(200).json({ user });
+    const users = await User.findAll(); 
+    res.status(200).json(users);
 }));
+
 
 /* CREATE a new user */
 router.post('/users', [

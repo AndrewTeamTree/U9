@@ -38,6 +38,11 @@ app.use((req, res, next) => {
 // Global error handler middleware
 app.use((err, req, res, next) => {
   console.error(`Global error handler: ${JSON.stringify(err.stack)}`);
+
+// Check if headers have already been sent
+  if (res.headersSent) {
+    return next(err);
+}
   res.status(err.status || 500).json({
     message: err.message,
     error: {},

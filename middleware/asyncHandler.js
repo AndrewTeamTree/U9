@@ -1,7 +1,6 @@
 'use strict';
 
 const asyncHandler = (fn) => (req, res, next) => {
-  Promise.resolve(fn(req, res, next)).catch(next);
   const authHeader = req.headers.authorization;
 
   if (!authHeader) {
@@ -22,9 +21,9 @@ const asyncHandler = (fn) => (req, res, next) => {
   const [username, password] = credentials.split(':');
 
   // Check if the username and password match with your database records
-  if (username === 'user' && password === 'password') {
-    // Authentication successful, proceed to the next middleware
-    next();
+  if (username === 'username' && password === 'password') {
+    // Authentication successful, proceed to execute the route handler
+    Promise.resolve(fn(req, res, next)).catch(next);
   } else {
     // Authentication failed, send 401 Unauthorized response
     console.warn('Invalid credentials');

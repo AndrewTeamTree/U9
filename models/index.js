@@ -38,14 +38,6 @@ Object.keys(db).forEach(modelName => {
   }
 });
 
-// Check if the UserId column already exists in the Courses table
-sequelize.queryInterface.describeTable('Courses').then(attributes => {
-  
-   
-  
-}).catch(err => {
-  console.error('Error describing Courses table:', err);
-});
 
 db.sequelize = sequelize;
 db.Sequelize = Sequelize;
