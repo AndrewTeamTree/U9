@@ -4,10 +4,10 @@
 const express = require('express');
 const morgan = require('morgan');
 const sequelize = require('./models/index').sequelize; 
-const userRoute = require('./routes/userRoutes');
-const courseRoute = require('./routes/courseRoutes');
-const { asyncHandler } = require('./middleware/asyncHandler'); 
+const userRoute = require('./routes/userRoutes.js');
+const courseRoute = require('./routes/courseRoutes.js');
 const app = express();
+
 
 // Root route
 app.get('/', (req, res) => {
@@ -16,10 +16,6 @@ app.get('/', (req, res) => {
   });
 });
 
-// Apply authentication middleware to routes
-app.post('/api/resource', asyncHandler, (req, res) => { 
-  res.json({ message: 'Protected resource accessed successfully' });
-});
 
 app.use(express.json());
 app.use(morgan('dev'));

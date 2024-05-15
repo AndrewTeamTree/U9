@@ -2,7 +2,7 @@
 
 const express = require('express');
 const router = express.Router();
-const { asyncHandler } = require('../middleware/asyncHandler');
+const  asyncHandler  = require('../middleware/asyncHandler');
 const { User, Course } = require('../models'); 
 const { check, validationResult } = require('express-validator');
 const base64Credentials = Buffer.from('username:password').toString('base64');
@@ -25,7 +25,7 @@ router.post('/courses', [
     .notEmpty()
     .withMessage('Please enter a valid course description.'),
 ],
-asyncHandler(async (req, res) => {
+asyncHandler (async (req, res) => {
   const result = validationResult(req);
 
   if (result.isEmpty()) {

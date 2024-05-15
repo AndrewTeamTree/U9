@@ -2,8 +2,10 @@
 const { Model, DataTypes } = require('sequelize');
 const bcryptjs = require('bcryptjs');
 
+
+
 module.exports = (sequelize) => {
-  class User extends Model { }
+  class User extends Model {}
   User.init({
     firstName: {
       type: DataTypes.STRING,
@@ -58,12 +60,15 @@ module.exports = (sequelize) => {
           msg: 'Please provide a password.',
         },
       },
-      set(val) {
-        const hashedPassword = bcryptjs.hashSync(val, 10);
-        this.setDataValue('password', hashedPassword);
-      }
-    },
-  }, { sequelize });
+       set(val) {
+    if (val && !val.startsWith('$2')) {
+      // Check if the password is not already hashed
+      const hashedPassword = bcryptjs.hashSync(val, 10);
+      this.setDataValue('password', hashedPassword);
+    }
+  }
+}
+}, { sequelize });
 
   User.associate = (models) => {
     User.hasMany(models.Course);
