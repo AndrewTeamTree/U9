@@ -7,9 +7,11 @@ const authUser = async (req, res, next) => {
   const credentials = auth(req);
 
   if (!credentials) {
-    console.warn('Authorization header not found');
-    return res.status(401).json({ message: 'Authorization header not found' });
+    console.warn('Authorization header or username not found');
+    return res.status(401).json({ message: 'Authorization header or username not found' });
   }
+
+  console.log('Received credentials:', credentials);
 
   const user = await User.findOne({ where: { emailAddress: credentials.name } });
   if (!user) {

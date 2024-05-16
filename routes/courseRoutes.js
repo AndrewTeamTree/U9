@@ -2,22 +2,79 @@
 
 const express = require('express');
 const router = express.Router();
-const  asyncHandler  = require('../middleware/asyncHandler');
+const authUser = require('../middleware/authUser');
 const { User, Course } = require('../models'); 
 const { check, validationResult } = require('express-validator');
-const base64Credentials = Buffer.from('username:password').toString('base64');
 
-// Middleware to add Authorization header to requests
-const addAuthorizationHeader = (req, res, next) => {
-  req.headers.authorization = `Basic ${base64Credentials}`;
-  next();
+
+
+router.post('/courses', [
+  check('title').notEmpty().withMessage('Title is required'),
+  check('description').notEmpty().withMessage('Description is required'),
+], authUser, async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
+  try {
+    const course = await Course.create(req.body);
+    res.status(201).location(`/courses/${course.id}`).end();
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+
+// GET /api/courses route
+router.get('/courses',  authUser, async (req, res) => {
+  try {
+    const courses = await Course.findAll({
+      include: {
+        model: User,
+      }
+    });
+    res.status(200).json(courses);
+  } catch (error) {
+    console.error('Error fetching courses:', error);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+});
+
+
+
+// GET /api/courses/:id route
+// Define the route handler as a separate function
+const getCourseByIdHandler = async (req, res) => {
+    const courseId = req.params.id;
+    console.log('Requested Course ID:', courseId);
+    try {
+        const course = await Course.findByPk(courseId, {
+            include: {
+                model: User,
+            }
+        });
+        if (course) {
+            console.log('Found Course:', course);
+            res.json(course);
+        } else {
+            console.log('Course not found');
+            res.status(404).json({ error: 'Course not found' });
+        }
+    } catch (error) {
+        console.error('Error fetching course:', error);
+        res.status(500).json({ message: 'Internal Server Error' });
+    }
 };
 
-// Apply the middleware to all routes in this router
-router.use(addAuthorizationHeader);
+// Use the route handler with the authUser middleware
+router.get('/courses/:id', authUser, getCourseByIdHandler);
 
-// POST /api/courses route
-router.post('/courses', [
+
+
+// PUT /api/courses/:id route
+router.put('/courses/:id', authUser, [
   check('title')
     .notEmpty()
     .withMessage('Please enter a valid course title.'),
@@ -25,20 +82,27 @@ router.post('/courses', [
     .notEmpty()
     .withMessage('Please enter a valid course description.'),
 ],
-asyncHandler (async (req, res) => {
+async (req, res) => {
   const result = validationResult(req);
 
   if (result.isEmpty()) {
+    let course;
     try {
-      const course = await Course.build(req.body);
-      const user = await User.findByPk(req.body.userId);
+      course = await Course.findByPk(req.params.id);
+      if (course) {
+        await course.set(req.body);
+        const user = await User.findByPk(req.body.userId);
 
-      if (!user) {
-        res.status(404).json({ message: 'User not found' });
+        // check if user exists before Course can be saved
+        if (!user) {
+          res.status(404).json({ message: 'User not found' });
+        }
+
+        await course.save();
+        res.status(204).location(`/courses/${course.id}`).end();
+      } else {
+        res.status(404).json({ message: 'Course not found.' });
       }
-
-      await course.save();
-      res.status(201).location(`/courses/${course.id}`).end();
     } catch (error) {
       if (error.name === "SequelizeValidationError" || error.name === "SequelizeUniqueConstraintError") {
         const errors = error.errors.map(err => err.message);
@@ -48,95 +112,13 @@ asyncHandler (async (req, res) => {
       }
     }
   } else {
-    res.status(400).send({ errors: result.array() }); 
+    res.status(400).send({ errors: result.array() }); // runs if empty title or description
   }
-}));
+});
 
-
-
-
-// GET /api/courses route
-router.get('/courses', asyncHandler(async (req, res) => {
-  try {
-    const courses = await Course.findAll({
-      include: {
-        model: User,
-      }
-    });
-      res.status(200).json(courses);
-  } catch (error) {
-    console.error('Error fetching courses:', error);
-    res.status(500).json({ message: 'Internal Server Error' });
-  }
-}));
-
-// GET /api/courses/:id route
-router.get('/courses/:id', asyncHandler(async (req, res) => {
-    const courseId = req.params.id;
-    console.log('Requested Course ID:', courseId);
-    const course = await Course.findByPk(courseId, {
-      include: {
-        model: User,
-      }
-    });
-    if (course) {
-        console.log('Found Course:', course); 
-        // Send course object in the response
-        res.json(course);
-    } else {
-        console.log('Course not found'); 
-        // Send error response if course is not found
-        res.status(404).json({ error: 'Course not found' });
-    }
-}));
-
-
-// PUT /api/courses/:id route
-router.put('/courses/:id', [
-  check('title')
-    .notEmpty()
-    .withMessage('Please enter a valid course title.'),
-  check('description')
-    .notEmpty()
-    .withMessage('Please enter a valid course description.'),
-],
-  asyncHandler(async (req, res) => {
-    const result = validationResult(req);
-
-    if (result.isEmpty()) {
-      let course;
-      try {
-        course = await Course.findByPk(req.params.id);
-        if (course) {
-          await course.set(req.body);
-          const user = await User.findByPk(req.body.userId);
-
-          // check if user exists before Course can be saved
-          if (!user) {
-            res.status(404).json({ message: 'User not found' });
-          }
-
-          await course.save();
-          res.status(204).location(`/courses/${course.id}`).end();
-        } else {
-          res.status(404).json({ message: 'Course not found.' });
-        }
-      } catch (error) {
-        if (error.name === "SequelizeValidationError" || error.name === "SequelizeUniqueConstraintError") {
-          const errors = error.errors.map(err => err.message);
-          res.status(400).json({ errors });
-        } else {
-          throw error; //error caught in the asyncHandler's catch block
-        }
-      }
-    } else {
-      res.status(400).send({ errors: result.array() }); // runs if empty title or description
-    }
-  })
-);
 
 // DELETE /api/courses/:id route
-router.delete('/courses/:id', asyncHandler(async (req, res) => {
+router.delete('/courses/:id', authUser, async (req, res) => {
   const course = await Course.findByPk(req.params.id);
   if (course) {
     await course.destroy();
@@ -144,7 +126,7 @@ router.delete('/courses/:id', asyncHandler(async (req, res) => {
   } else {
     res.status(404).json({ message: 'Course not found' });
   };
-}));
+});
 
 module.exports = router;
 

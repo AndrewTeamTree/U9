@@ -1,44 +1,36 @@
-
-const asyncHandler = require('../middleware/asyncHandler');
+'use strict';
 const authUser = require('../middleware/authUser');
 const { check, validationResult } = require('express-validator');
-const  User  = require('../models'); 
-const bcrypt = require('bcryptjs'); 
+const { User } = require('../models');
+
 const express = require('express');
 const router = express.Router();
 const nameRegex = /^[a-zA-Z-]+(?:[\s-][a-zA-Z-]+)*$/;
-const base64Credentials = Buffer.from('username:password').toString('base64');
-
-
-// Middleware to add Authorization header to requests
-const addAuthorizationHeader = (req, res, next) => {
-  req.headers.authorization = `Basic ${base64Credentials}`;
-  next();
-};
-
-// Apply the middleware to all routes in this router
-router.use(addAuthorizationHeader);
-
-
 
 // GET /api/users route
-router.get('/users', authUser, asyncHandler(async (req, res) => {
+router.get('/users', authUser, async (req, res) => {
   try {
-    const { emailAddress } = req.query;
+    const authenticatedUser = req.user; 
+    if (authenticatedUser) {
+      const foundUser = await User.findOne({ 
+        where: { id: authenticatedUser.id }, 
+        attributes: ['id', 'firstName', 'lastName', 'emailAddress'] 
+      });
 
-    if (emailAddress) {
-      const user = await User.findOne({ where: { emailAddress } });
-      if (user) {
-        res.status(200).json(user);
+      if (foundUser) {
+        res.status(200).json(foundUser);
       } else {
         res.status(404).json({ message: 'User not found' });
       }
+    } else {
+      res.status(400).json({ message: 'Authentication required' });
     }
   } catch (error) {
-    console.error('Error fetching users:', error);
+    console.error(error);
     res.status(500).json({ message: 'Internal server error' });
   }
-}));
+});
+
 
 /* CREATE a new user */
 router.post('/users', [
@@ -46,26 +38,26 @@ router.post('/users', [
   check('lastName').isLength({ min: 2 }).matches(nameRegex).withMessage('Last name is required. Please use only alphabetic characters and hyphens.'),
   check('emailAddress').isEmail().withMessage('Invalid email format'),
   check('password').isLength({ min: 8, max: 20 }).withMessage('Must be 8-20 characters in length.')
-], asyncHandler(async (req, res) => {
+],  async (req, res) => {
   const result = validationResult(req);
 
-  if (result.isEmpty()) {
-    try {
-      const hashedPassword = await bcrypt.hash(req.body.password, 10);
-      req.body.password = hashedPassword;
-      await User.create(req.body);
-      res.status(201).location('/').end();
-    } catch (error) {
-      if (error.name === "SequelizeValidationError" || error.name === "SequelizeUniqueConstraintError") {
-        const errors = error.errors.map(err => err.message);
-        res.status(400).json({ errors });
-      } else {
-        throw error;
-      }
-    }
-  } else {
-    res.status(400).json({ errors: result.array() });
+  if (!result.isEmpty()) {
+    return res.status(400).json({ errors: result.array() });
   }
-}));
+
+  try {
+    await User.build(req.body);
+    res.status(201).location('/').end();
+  } catch (error) {
+    if (error.name === "SequelizeValidationError" || error.name === "SequelizeUniqueConstraintError") {
+      const errors = error.errors.map(err => err.message);
+      res.status(400).json({ errors });
+    } else {
+      console.error(error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  }
+});
+
 
 module.exports = router;

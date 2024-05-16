@@ -3,10 +3,22 @@
 
 const express = require('express');
 const morgan = require('morgan');
-const sequelize = require('./models/index').sequelize; 
-const userRoute = require('./routes/userRoutes.js');
-const courseRoute = require('./routes/courseRoutes.js');
+ const authUser = require('./middleware/authUser'); 
+const userRoute = require('./routes/userRoutes');
+const courseRoute = require('./routes/courseRoutes');
 const app = express();
+// Import Sequelize and your Sequelize model
+const sequelize = require('./models/index').sequelize;
+
+// Attempt to authenticate with the database
+sequelize
+  .authenticate()
+  .then(() => {
+    console.log('Connection to the database has been established successfully.');
+  })
+  .catch(err => {
+    console.error('Unable to connect to the database:', err);
+  });
 
 
 // Root route
@@ -16,6 +28,10 @@ app.get('/', (req, res) => {
   });
 });
 
+// Apply authentication middleware to routes
+app.post('/api/resource', authUser, (req, res) => { 
+  res.json({ message: 'Accessed successfully' });
+});
 
 app.use(express.json());
 app.use(morgan('dev'));
