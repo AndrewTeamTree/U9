@@ -14,28 +14,7 @@ router.get('/users', authUser, async (req, res) => {
 });
 
 /* CREATE a new user */
-router.post('/users', [
-  check('firstName')
-    .isLength({ min: 2 })
-    .matches(nameRegex)
-    .withMessage('First name is required. Please use only alphabetic characters and hyphens.'),
-  check('lastName')
-    .isLength({ min: 2 })
-    .matches(nameRegex)
-    .withMessage('Last name is required. Please use only alphabetic characters and hyphens.'),
-  check('emailAddress')
-    .isEmail()
-    .withMessage('Invalid email format'),
-  check('password')
-    .isLength({ min: 8, max: 20 })
-    .withMessage('Must be 8-20 characters in length.')
-],
-  authUser, (async (req, res) => {
-    
-    const result = validationResult(req);
-
-    // if result contains no errors ...
-    if (result.isEmpty()) {
+router.post('/users', async (req, res) => {
       let user;
       try {
         await User.create(req.body);
@@ -49,10 +28,8 @@ router.post('/users', [
           throw (error);
         }
       }
-    } else {
-      res.status(400).json({ errors: result.array() }); 
-    }
-  })
-);
+    
+  });
+
 
 module.exports = router;

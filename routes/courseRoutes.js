@@ -28,7 +28,7 @@ router.post('/courses', authUser, [
 
 
 // GET /api/courses route
-router.get('/courses',  authUser, async (req, res) => {
+router.get('/courses', async (req, res) => {
   try {
     const courses = await Course.findAll({
       include: {
@@ -69,7 +69,7 @@ const getCourseByIdHandler = async (req, res) => {
 };
 
 // Use the route handler with the authUser middleware
-router.get('/courses/:id', authUser, getCourseByIdHandler);
+router.get('/courses/:id', getCourseByIdHandler);
 
 
 
