@@ -3,7 +3,7 @@
 
 const express = require('express');
 const morgan = require('morgan');
- const authUser = require('./middleware/authUser'); 
+
 const userRoute = require('./routes/userRoutes');
 const courseRoute = require('./routes/courseRoutes');
 const app = express();
@@ -26,11 +26,6 @@ app.get('/', (req, res) => {
   res.json({
     message: 'Welcome to the REST API project!',
   });
-});
-
-// Apply authentication middleware to routes
-app.post('/api/resource', authUser, (req, res) => { 
-  res.json({ message: 'Accessed successfully' });
 });
 
 app.use(express.json());

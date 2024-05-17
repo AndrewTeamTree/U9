@@ -8,10 +8,10 @@ const { check, validationResult } = require('express-validator');
 
 
 
-router.post('/courses', [
+router.post('/courses', authUser, [
   check('title').notEmpty().withMessage('Title is required'),
   check('description').notEmpty().withMessage('Description is required'),
-], authUser, async (req, res) => {
+],  async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return res.status(400).json({ errors: errors.array() });
